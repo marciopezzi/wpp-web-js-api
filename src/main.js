@@ -1,25 +1,20 @@
-const { Client, LocalAuth } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
+require('dotenv').config();
+const express = require('express');
+const routes = require('./routes');
+const { initializeClient } = require('./whatsapp');
 
-const client = new Client({
-  authStrategy: new LocalAuth({
-    clientId: "main-session",
-  }),
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use(routes);
+
+app.use((err, req, res, next) => {
+  console.error('❌ Erro interno:', err);
+  res.status(500).json({ error: 'Erro interno do servidor.' });
 });
 
-client.on("qr", (qr) => {
-  console.log("📱 Escaneie o QR code abaixo para autenticar:");
-  qrcode.generate(qr, { small: true });
+app.listen(port, () => {
+  console.log(`🚀 Servidor iniciado na porta ${port}`);
+  initializeClient();
 });
-
-client.on("ready", () => {
-  console.log("✅ Cliente conectado e pronto!");
-});
-
-client.on("message", (msg) => {
-  if (msg.body === "!ping") {
-    msg.reply("pong");
-  }
-});
-
-client.initialize();
